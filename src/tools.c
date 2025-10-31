@@ -24,12 +24,41 @@ static const ToolDescriptor *FindDescriptor(ToolType type)
     return NULL;
 }
 
+static bool ColorsEqual(Color a, Color b)
+{
+    return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+}
+
+static void PushHistory(ColorHistory *history, Color color)
+{
+    if (!history) return;
+    if (history->count > 0 && ColorsEqual(history->entries[history->count - 1], color))
+    {
+        return;
+    }
+
+    if (history->count < COLOR_HISTORY_CAPACITY)
+    {
+        history->entries[history->count++] = color;
+    }
+    else
+    {
+        for (size_t i = 1; i < COLOR_HISTORY_CAPACITY; ++i)
+        {
+            history->entries[i - 1] = history->entries[i];
+        }
+        history->entries[COLOR_HISTORY_CAPACITY - 1] = color;
+    }
+}
+
 void ToolsInit(ToolState *tools)
 {
     if (!tools) return;
     tools->activeTool = TOOL_BRUSH;
     tools->foregroundColor = BLACK;
     tools->backgroundColor = WHITE;
+    tools->foregroundHistory.count = 0;
+    tools->backgroundHistory.count = 0;
     tools->isDrawing = false;
     tools->hasDragStart = false;
     tools->dragStartX = 0;
@@ -40,6 +69,15 @@ void ToolsInit(ToolState *tools)
     tools->hasLastCursor = false;
     tools->lastCursorX = 0;
     tools->lastCursorY = 0;
+    tools->requestPaletteSave = false;
+    tools->requestPaletteLoad = false;
+    for (size_t i = 0; i < COLOR_HISTORY_CAPACITY; ++i)
+    {
+        tools->foregroundHistory.entries[i] = BLANK;
+        tools->backgroundHistory.entries[i] = BLANK;
+    }
+    PushHistory(&tools->foregroundHistory, tools->foregroundColor);
+    PushHistory(&tools->backgroundHistory, tools->backgroundColor);
 }
 
 static Color GetPaletteColor(int index)
@@ -81,18 +119,26 @@ void ToolsHandleInput(ToolState *tools)
         ResetTransientState(tools);
     }
 
-    if (IsKeyPressed(KEY_ONE)) tools->foregroundColor = GetPaletteColor(0);
-    if (IsKeyPressed(KEY_TWO)) tools->foregroundColor = GetPaletteColor(1);
-    if (IsKeyPressed(KEY_THREE)) tools->foregroundColor = GetPaletteColor(2);
-    if (IsKeyPressed(KEY_FOUR)) tools->foregroundColor = GetPaletteColor(3);
-    if (IsKeyPressed(KEY_FIVE)) tools->foregroundColor = GetPaletteColor(4);
-    if (IsKeyPressed(KEY_SIX)) tools->foregroundColor = GetPaletteColor(5);
+    if (IsKeyPressed(KEY_ONE)) ToolsSetForegroundColor(tools, GetPaletteColor(0));
+    if (IsKeyPressed(KEY_TWO)) ToolsSetForegroundColor(tools, GetPaletteColor(1));
+    if (IsKeyPressed(KEY_THREE)) ToolsSetForegroundColor(tools, GetPaletteColor(2));
+    if (IsKeyPressed(KEY_FOUR)) ToolsSetForegroundColor(tools, GetPaletteColor(3));
+    if (IsKeyPressed(KEY_FIVE)) ToolsSetForegroundColor(tools, GetPaletteColor(4));
+    if (IsKeyPressed(KEY_SIX)) ToolsSetForegroundColor(tools, GetPaletteColor(5));
 
     if (IsKeyPressed(KEY_X))
     {
-        Color temp = tools->foregroundColor;
-        tools->foregroundColor = tools->backgroundColor;
-        tools->backgroundColor = temp;
+        ToolsSwapColors(tools);
+    }
+
+    bool ctrlDown = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+    if (ctrlDown && IsKeyPressed(KEY_S))
+    {
+        tools->requestPaletteSave = true;
+    }
+    if (ctrlDown && IsKeyPressed(KEY_O))
+    {
+        tools->requestPaletteLoad = true;
     }
 }
 
@@ -224,7 +270,7 @@ bool ToolsApplyToCanvas(ToolState *tools, const Camera2D *camera, Canvas *canvas
             Color sampled = CanvasGetPixel(canvas, pixelX, pixelY);
             if (sampled.a > 0)
             {
-                tools->foregroundColor = sampled;
+                ToolsSetForegroundColor(tools, sampled);
             }
         }
     }
@@ -297,4 +343,29 @@ size_t ToolsGetDescriptors(const ToolDescriptor **outDescriptors)
         *outDescriptors = TOOL_DESCRIPTORS;
     }
     return TOOL_COUNT;
+}
+
+void ToolsSetForegroundColor(ToolState *tools, Color color)
+{
+    if (!tools) return;
+    if (ColorsEqual(tools->foregroundColor, color)) return;
+    tools->foregroundColor = color;
+    PushHistory(&tools->foregroundHistory, color);
+}
+
+void ToolsSetBackgroundColor(ToolState *tools, Color color)
+{
+    if (!tools) return;
+    if (ColorsEqual(tools->backgroundColor, color)) return;
+    tools->backgroundColor = color;
+    PushHistory(&tools->backgroundHistory, color);
+}
+
+void ToolsSwapColors(ToolState *tools)
+{
+    if (!tools) return;
+    Color previousForeground = tools->foregroundColor;
+    Color previousBackground = tools->backgroundColor;
+    ToolsSetForegroundColor(tools, previousBackground);
+    ToolsSetBackgroundColor(tools, previousForeground);
 }
