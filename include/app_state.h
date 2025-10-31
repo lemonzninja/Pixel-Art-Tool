@@ -8,9 +8,14 @@ typedef enum ToolType {
     TOOL_ERASER = 1
 } ToolType;
 
+typedef struct Canvas {
+    int width;
+    int height;
+    Color *pixels;
+} Canvas;
+
 typedef struct AppState {
-    Image canvasImage;
-    Texture2D canvasTexture;
+    Canvas canvas;
     ToolType activeTool;
     int activeColorIndex;
     Color palette[6];
