@@ -118,6 +118,44 @@ void AppDraw(const App *app)
         if (thickness < 0.25f) thickness = 0.25f;
         CanvasDrawGrid(&app->canvas, Fade(LIGHTGRAY, 0.6f), thickness);
     }
+
+    const float borderWidth = CanvasGetWidthPixels(&app->canvas);
+    const float borderHeight = CanvasGetHeightPixels(&app->canvas);
+    if (borderWidth > 0.0f && borderHeight > 0.0f)
+    {
+        float outlineThickness = 2.0f / app->camera.zoom;
+        if (outlineThickness < 0.5f) outlineThickness = 0.5f;
+        Rectangle borderRect = { 0.0f, 0.0f, borderWidth, borderHeight };
+        DrawRectangleLinesEx(borderRect, outlineThickness, Fade(RAYWHITE, 0.6f));
+    }
+
+    Vector2 mousePosition = GetMousePosition();
+    Vector2 worldPosition = GetScreenToWorld2D(mousePosition, app->camera);
+    int hoverX = 0;
+    int hoverY = 0;
+    bool hoverValid = CanvasWorldToPixel(&app->canvas, worldPosition, &hoverX, &hoverY);
+    if (!hoverValid && app->tools.hasLastCursor)
+    {
+        hoverX = app->tools.lastCursorX;
+        hoverY = app->tools.lastCursorY;
+        hoverValid = CanvasContains(&app->canvas, hoverX, hoverY);
+    }
+
+    if (hoverValid)
+    {
+        Rectangle pixelRect = {
+            (float)(hoverX * app->canvas.pixelSize),
+            (float)(hoverY * app->canvas.pixelSize),
+            (float)app->canvas.pixelSize,
+            (float)app->canvas.pixelSize
+        };
+        Color hoverFill = Fade(SKYBLUE, 0.25f);
+        Color hoverOutline = Fade(SKYBLUE, 0.9f);
+        float hoverThickness = 2.0f / app->camera.zoom;
+        if (hoverThickness < 0.75f) hoverThickness = 0.75f;
+        DrawRectangleRec(pixelRect, hoverFill);
+        DrawRectangleLinesEx(pixelRect, hoverThickness, hoverOutline);
+    }
     EndMode2D();
 
     UIDraw(&app->ui, &app->tools, app->camera.zoom);
