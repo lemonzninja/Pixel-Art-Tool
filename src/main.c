@@ -22,6 +22,9 @@ int main(void)
         return 1;
     }
 
+    // Render an initial frame so the UI is visible as soon as the window appears.
+    UpdateDrawFrame();
+
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 #else
