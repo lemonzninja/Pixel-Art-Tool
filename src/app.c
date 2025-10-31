@@ -92,7 +92,7 @@ void AppUpdate(App *app)
 
     UpdateCamera(app);
     ToolsHandleInput(&app->tools);
-    UIHandleInput(&app->ui);
+    UIHandleInput(&app->ui, &app->tools);
 
     if (IsKeyPressed(KEY_C))
     {
