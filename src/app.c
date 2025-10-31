@@ -52,6 +52,7 @@ bool AppInit(App *app, int screenWidth, int screenHeight)
 {
     if (!app) return false;
 
+    SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
     InitWindow(screenWidth, screenHeight, "Pixel Art Tool");
     SetTargetFPS(60);
 
