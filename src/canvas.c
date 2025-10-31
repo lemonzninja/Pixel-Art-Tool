@@ -1,5 +1,11 @@
-#include "canvas.h"
+/**************************************************************************************
+*                   - Core Canvas System -                                                    
+*  Create a 2D array or dynamic structure to store pixel data (colors)                                                                                 
+*  Render the pixel grid using DrawRectangle() or a texture-based approach                                                                     
+*  Add grid overlay that can be toggled on/off             
+**************************************************************************************/
 
+#include "canvas.h"
 #include "tools.h"
 
 static bool CanvasCoordsFromMouse(Vector2 mouse, int *x, int *y);
