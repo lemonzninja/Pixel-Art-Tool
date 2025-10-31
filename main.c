@@ -21,7 +21,8 @@ typedef enum ToolType {
 } ToolType;
 
 typedef struct AppState {
-    RenderTexture2D canvasTarget;
+    Image canvasImage;
+    Texture2D canvasTexture;
     ToolType activeTool;
     int activeColorIndex;
     Color palette[6];
@@ -55,12 +56,9 @@ int main()
     //--------------------------------------------------------------------------------------
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib pixel art");
 
-    gState.canvasTarget = LoadRenderTexture(CANVAS_PIXEL_WIDTH, CANVAS_PIXEL_HEIGHT);
-    gState.canvasTarget.texture.filter = TEXTURE_FILTER_POINT;
-
-    BeginTextureMode(gState.canvasTarget);
-        ClearBackground(BLANK);
-    EndTextureMode();
+    gState.canvasImage = GenImageColor(CANVAS_PIXEL_WIDTH, CANVAS_PIXEL_HEIGHT, BLANK);
+    gState.canvasTexture = LoadTextureFromImage(gState.canvasImage);
+    SetTextureFilter(gState.canvasTexture, TEXTURE_FILTER_POINT);
 
     gState.palette[0] = BLACK;
     gState.palette[1] = WHITE;
@@ -89,7 +87,8 @@ int main()
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(gState.canvasTarget);
+    UnloadTexture(gState.canvasTexture);
+    UnloadImage(gState.canvasImage);
 
     CloseWindow();                  // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -162,6 +161,8 @@ static void UpdateDrawFrame(void)
 
     bool mouseOnCanvas = CheckCollisionPointRec(mouse, canvasScreenRect);
 
+    bool pixelModified = false;
+
     if (mouseOnCanvas && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !interactingWithUI)
     {
         int canvasX = (int)((mouse.x - CANVAS_POSITION.x) / CANVAS_ZOOM);
@@ -172,25 +173,28 @@ static void UpdateDrawFrame(void)
         if (canvasX >= CANVAS_PIXEL_WIDTH) canvasX = CANVAS_PIXEL_WIDTH - 1;
         if (canvasY >= CANVAS_PIXEL_HEIGHT) canvasY = CANVAS_PIXEL_HEIGHT - 1;
 
-        BeginTextureMode(gState.canvasTarget);
-            if (gState.activeTool == TOOL_PENCIL)
-            {
-                DrawRectangle(canvasX, canvasY, 1, 1, gState.palette[gState.activeColorIndex]);
-            }
-            else if (gState.activeTool == TOOL_ERASER)
-            {
-                DrawRectangle(canvasX, canvasY, 1, 1, BLANK);
-            }
-        EndTextureMode();
+        if (gState.activeTool == TOOL_PENCIL)
+        {
+            ImageDrawPixel(&gState.canvasImage, canvasX, canvasY, gState.palette[gState.activeColorIndex]);
+            pixelModified = true;
+        }
+        else if (gState.activeTool == TOOL_ERASER)
+        {
+            ImageDrawPixel(&gState.canvasImage, canvasX, canvasY, BLANK);
+            pixelModified = true;
+        }
+    }
+
+    if (pixelModified)
+    {
+        UpdateTexture(gState.canvasTexture, gState.canvasImage.data);
     }
 
     BeginDrawing();
 
         ClearBackground(RAYWHITE);
 
-        Rectangle source = { 0.0f, 0.0f, (float)CANVAS_PIXEL_WIDTH, -(float)CANVAS_PIXEL_HEIGHT };
-        Rectangle dest = { canvasScreenRect.x, canvasScreenRect.y, canvasScreenRect.width, canvasScreenRect.height };
-        DrawTexturePro(gState.canvasTarget.texture, source, dest, (Vector2){ 0.0f, 0.0f }, 0.0f);
+        DrawTextureEx(gState.canvasTexture, (Vector2){ canvasScreenRect.x, canvasScreenRect.y }, 0.0f, (float)CANVAS_ZOOM, WHITE);
 
         // Draw canvas border and hover indicator.
         DrawRectangleLinesEx(canvasScreenRect, 2.0f, DARKGRAY);
