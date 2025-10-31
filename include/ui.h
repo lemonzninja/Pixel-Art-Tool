@@ -11,7 +11,7 @@ typedef struct UIState {
 } UIState;
 
 void UIInit(UIState *ui);
-void UIHandleInput(UIState *ui);
+void UIHandleInput(UIState *ui, ToolState *tools);
 void UIDraw(const UIState *ui, const ToolState *tools, float zoom);
 
 #endif // UI_H
