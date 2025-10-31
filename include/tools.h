@@ -17,10 +17,19 @@ typedef enum ToolType {
     TOOL_COUNT
 } ToolType;
 
+#define COLOR_HISTORY_CAPACITY 16
+
+typedef struct ColorHistory {
+    Color entries[COLOR_HISTORY_CAPACITY];
+    size_t count;
+} ColorHistory;
+
 typedef struct ToolState {
     ToolType activeTool;
     Color foregroundColor;
     Color backgroundColor;
+    ColorHistory foregroundHistory;
+    ColorHistory backgroundHistory;
     bool isDrawing;
     bool hasDragStart;
     int dragStartX;
@@ -31,6 +40,8 @@ typedef struct ToolState {
     bool hasLastCursor;
     int lastCursorX;
     int lastCursorY;
+    bool requestPaletteSave;
+    bool requestPaletteLoad;
 } ToolState;
 
 typedef struct ToolDescriptor {
@@ -48,5 +59,8 @@ bool ToolsApplyToCanvas(ToolState *tools, const Camera2D *camera, struct Canvas 
 const char *ToolsGetToolName(ToolType type);
 const char *ToolsGetToolShortcutLabel(ToolType type);
 size_t ToolsGetDescriptors(const ToolDescriptor **outDescriptors);
+void ToolsSetForegroundColor(ToolState *tools, Color color);
+void ToolsSetBackgroundColor(ToolState *tools, Color color);
+void ToolsSwapColors(ToolState *tools);
 
 #endif // TOOLS_H
