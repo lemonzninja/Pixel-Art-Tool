@@ -26,13 +26,21 @@ bool ApplyTool(AppState *state, int canvasX, int canvasY)
         return false;
     }
 
+    Canvas *canvas = &state->canvas;
+    if (!canvas->pixels || canvasX < 0 || canvasY < 0 || canvasX >= canvas->width || canvasY >= canvas->height)
+    {
+        return false;
+    }
+
+    int index = canvasY * canvas->width + canvasX;
+
     switch (state->activeTool)
     {
         case TOOL_PENCIL:
-            ImageDrawPixel(&state->canvasImage, canvasX, canvasY, state->palette[state->activeColorIndex]);
+            canvas->pixels[index] = state->palette[state->activeColorIndex];
             return true;
         case TOOL_ERASER:
-            ImageDrawPixel(&state->canvasImage, canvasX, canvasY, BLANK);
+            canvas->pixels[index] = BLANK;
             return true;
         default:
             break;
