@@ -69,8 +69,8 @@ void DrawCanvas(const AppState *state, Vector2 mouse)
     if (CanvasCoordsFromMouse(mouse, &canvasX, &canvasY))
     {
         Rectangle hoverRect = {
-            CANVAS_POSITION.x + canvasX * CANVAS_ZOOM,
-            CANVAS_POSITION.y + canvasY * CANVAS_ZOOM,
+            canvasRect.x + canvasX * CANVAS_ZOOM,
+            canvasRect.y + canvasY * CANVAS_ZOOM,
             (float)CANVAS_ZOOM,
             (float)CANVAS_ZOOM
         };
@@ -96,12 +96,28 @@ static bool CanvasCoordsFromMouse(Vector2 mouse, int *x, int *y)
         return false;
     }
 
-    int localX = (int)((mouse.x - CANVAS_POSITION.x) / CANVAS_ZOOM);
-    int localY = (int)((mouse.y - CANVAS_POSITION.y) / CANVAS_ZOOM);
+    float relativeX = (mouse.x - canvasRect.x) / (float)CANVAS_ZOOM;
+    float relativeY = (mouse.y - canvasRect.y) / (float)CANVAS_ZOOM;
 
-    if (localX < 0 || localY < 0 || localX >= CANVAS_PIXEL_WIDTH || localY >= CANVAS_PIXEL_HEIGHT)
+    int localX = (int)relativeX;
+    int localY = (int)relativeY;
+
+    if (localX < 0)
     {
-        return false;
+        localX = 0;
+    }
+    else if (localX >= CANVAS_PIXEL_WIDTH)
+    {
+        localX = CANVAS_PIXEL_WIDTH - 1;
+    }
+
+    if (localY < 0)
+    {
+        localY = 0;
+    }
+    else if (localY >= CANVAS_PIXEL_HEIGHT)
+    {
+        localY = CANVAS_PIXEL_HEIGHT - 1;
     }
 
     if (x)
