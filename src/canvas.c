@@ -9,6 +9,7 @@
 #include "tools.h"
 
 static bool CanvasCoordsFromMouse(Vector2 mouse, int *x, int *y);
+static void UploadCanvasPixel(const AppState *state, int x, int y);
 
 void InitCanvas(AppState *state)
 {
@@ -54,7 +55,7 @@ void HandleCanvasInput(AppState *state, Vector2 mouse, bool *pixelModified, bool
         if (ApplyTool(state, canvasX, canvasY))
         {
             *pixelModified = true;
-            UpdateTexture(state->canvasTexture, state->canvasImage.data);
+            UploadCanvasPixel(state, canvasX, canvasY);
         }
     }
 }
@@ -136,4 +137,29 @@ static bool CanvasCoordsFromMouse(Vector2 mouse, int *x, int *y)
     }
 
     return true;
+}
+
+static void UploadCanvasPixel(const AppState *state, int x, int y)
+{
+    if (!state || !state->canvasImage.data)
+    {
+        return;
+    }
+
+    if (x < 0 || y < 0 || x >= CANVAS_PIXEL_WIDTH || y >= CANVAS_PIXEL_HEIGHT)
+    {
+        return;
+    }
+
+    const Color *pixels = (const Color *)state->canvasImage.data;
+    Color pixel = pixels[y * CANVAS_PIXEL_WIDTH + x];
+
+    Rectangle updateRect = {
+        (float)x,
+        (float)(CANVAS_PIXEL_HEIGHT - 1 - y),
+        1.0f,
+        1.0f
+    };
+
+    UpdateTextureRec(state->canvasTexture, updateRect, &pixel);
 }
