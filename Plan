@@ -1,0 +1,391 @@
+# Aseprite Clone Development Plan
+
+## Project Overview
+Creating a pixel art editor similar to Aseprite using C and raylib.
+
+---
+
+## Phase 1: Foundation (Week 1-2)
+
+### 1.1 Project Setup
+- [ ] Install raylib and configure build system (Makefile/CMake)
+- [ ] Create project directory structure
+- [ ] Set up version control (git)
+- [ ] Create basic main.c with raylib window initialization
+
+### 1.2 Basic Canvas System
+- [ ] Implement 2D array for pixel data storage
+- [ ] Create canvas structure (width, height, pixel array)
+- [ ] Render canvas to screen using `DrawRectangle()` for each pixel
+- [ ] Add canvas background (checkerboard pattern for transparency)
+- [ ] Implement basic pixel coordinate to screen coordinate conversion
+
+### 1.3 Camera/Viewport System
+- [ ] Implement camera structure (position, zoom level)
+- [ ] Pan canvas with middle mouse button or spacebar + drag
+- [ ] Zoom in/out with mouse wheel (centered on cursor)
+- [ ] Clamp zoom levels (min/max)
+- [ ] Show zoom percentage in UI
+
+---
+
+## Phase 2: Core Drawing (Week 3-4)
+
+### 2.1 Basic Drawing Tools
+- [ ] Pencil tool: draw single pixels on left click
+- [ ] Click and drag drawing
+- [ ] Current color storage (foreground/background)
+- [ ] Eraser tool (set pixels to transparent)
+- [ ] Tool selection system (keyboard shortcuts: B for brush, E for eraser)
+
+### 2.2 Color System
+- [ ] Color structure (RGBA)
+- [ ] Basic color picker UI (HSV sliders or color wheel)
+- [ ] Foreground/background color display
+- [ ] Color swapping (X key)
+- [ ] Eyedropper tool (I key): sample color from canvas
+
+### 2.3 Advanced Drawing Tools
+- [ ] Line tool: Bresenham's algorithm
+- [ ] Rectangle tool (filled and outline modes)
+- [ ] Circle/Ellipse tool
+- [ ] Fill/Bucket tool: flood fill algorithm (stack-based)
+- [ ] Tool options (brush size, fill mode, etc.)
+
+---
+
+## Phase 3: UI System (Week 5-6)
+
+### 3.1 Basic UI Framework
+- [ ] Panel structure (position, size, visibility)
+- [ ] Button component (render, click detection, hover state)
+- [ ] Label/text rendering
+- [ ] Input handling for UI elements
+- [ ] UI layout system (anchoring, sizing)
+
+### 3.2 Essential Panels
+- [ ] **Top Menu Bar**: File, Edit, View, Layer, Frame
+- [ ] **Tool Panel**: Vertical toolbar with tool icons
+- [ ] **Color Panel**: Current colors + palette
+- [ ] **Status Bar**: Canvas position, zoom level, FPS
+
+### 3.3 UI Interactions
+- [ ] Dropdown menus
+- [ ] Tooltips on hover
+- [ ] Keyboard shortcuts display
+- [ ] Modal dialogs (New File, Resize Canvas, etc.)
+
+---
+
+## Phase 4: Layer System (Week 7-8)
+
+### 4.1 Layer Data Structure
+- [ ] Layer structure (name, pixel data, opacity, visibility, blend mode)
+- [ ] Dynamic array or linked list of layers
+- [ ] Active layer tracking
+- [ ] Layer rendering with alpha blending
+
+### 4.2 Layer Operations
+- [ ] Create new layer
+- [ ] Delete layer
+- [ ] Duplicate layer
+- [ ] Rename layer
+- [ ] Reorder layers (move up/down)
+- [ ] Merge layers (merge down, flatten image)
+
+### 4.3 Layer Panel UI
+- [ ] Layer list display with thumbnails
+- [ ] Layer selection (click to select)
+- [ ] Visibility toggle (eye icon)
+- [ ] Opacity slider per layer
+- [ ] Layer context menu (right-click options)
+
+---
+
+## Phase 5: History System (Week 9)
+
+### 5.1 Undo/Redo Implementation
+- [ ] Command pattern structure
+- [ ] Undo stack (stores previous canvas states or deltas)
+- [ ] Redo stack
+- [ ] Execute command, undo command, redo command functions
+- [ ] Memory management (limit history depth)
+
+### 5.2 Command Types
+- [ ] Draw command (store affected region)
+- [ ] Layer command (add, delete, modify)
+- [ ] Frame command (add, delete, modify)
+- [ ] Transform command (resize, flip, rotate)
+
+### 5.3 Integration
+- [ ] Ctrl+Z for undo
+- [ ] Ctrl+Y or Ctrl+Shift+Z for redo
+- [ ] Display undo/redo availability in UI
+- [ ] Clear history on file load
+
+---
+
+## Phase 6: Animation System (Week 10-11)
+
+### 6.1 Frame Structure
+- [ ] Frame structure (contains all layers for that frame)
+- [ ] Frame array/list management
+- [ ] Current frame tracking
+- [ ] Frame duration (for variable frame rates)
+
+### 6.2 Frame Operations
+- [ ] Add new frame
+- [ ] Delete frame
+- [ ] Duplicate frame
+- [ ] Copy/paste frames
+- [ ] Reorder frames (drag and drop in timeline)
+
+### 6.3 Timeline UI
+- [ ] Timeline panel at bottom
+- [ ] Frame thumbnails display
+- [ ] Frame selection (click to select)
+- [ ] Playback controls (play, pause, stop)
+- [ ] Frame navigation (previous, next, first, last)
+- [ ] FPS setting
+
+### 6.4 Animation Playback
+- [ ] Animation player (cycles through frames at specified FPS)
+- [ ] Loop modes (loop, ping-pong, once)
+- [ ] Onion skinning (show previous/next frames with transparency)
+- [ ] Onion skin settings (how many frames, opacity)
+
+---
+
+## Phase 7: File Operations (Week 12)
+
+### 7.1 Project Management
+- [ ] New project dialog (canvas size, initial layers)
+- [ ] Project structure (stores all layers, frames, settings)
+- [ ] Recent files list
+
+### 7.2 Save/Load System
+- [ ] Custom binary format (.ase or custom extension)
+- [ ] Save project with all layers and frames
+- [ ] Load project and reconstruct state
+- [ ] Save As functionality
+- [ ] Auto-save feature (optional)
+
+### 7.3 Export Functionality
+- [ ] Export as PNG (single frame, current layer or flattened)
+- [ ] Export as GIF (animated)
+- [ ] Export as sprite sheet (grid layout)
+- [ ] Export settings dialog (format, scale, frames)
+
+### 7.4 Import Functionality
+- [ ] Import PNG/JPG as new layer
+- [ ] Import sprite sheet (split into frames)
+- [ ] Drag and drop file support
+
+---
+
+## Phase 8: Advanced Features (Week 13-14)
+
+### 8.1 Selection Tools
+- [ ] Rectangle selection (marching ants outline)
+- [ ] Selection operations (move, copy, paste, cut)
+- [ ] Selection transform (resize, rotate)
+- [ ] Deselect (Ctrl+D)
+
+### 8.2 Transform Operations
+- [ ] Canvas resize
+- [ ] Canvas crop
+- [ ] Flip horizontal/vertical
+- [ ] Rotate 90°, 180°, 270°
+- [ ] Scale (nearest neighbor for pixel art)
+
+### 8.3 Color Features
+- [ ] Color palette creation and management
+- [ ] Save/load palettes
+- [ ] Replace color across entire canvas/frame
+- [ ] Adjust hue/saturation/brightness
+- [ ] Color reduction/posterization
+
+### 8.4 Drawing Enhancements
+- [ ] Brush shapes (circle, square, custom)
+- [ ] Symmetry mode (horizontal, vertical, radial)
+- [ ] Pixel-perfect line mode
+- [ ] Dithering patterns
+- [ ] Tiled drawing mode (wrap around edges)
+
+---
+
+## Phase 9: Polish & Optimization (Week 15-16)
+
+### 9.1 Performance Optimization
+- [ ] Use `RenderTexture2D` for canvas (render to texture, display scaled)
+- [ ] Optimize pixel rendering (batch rendering, dirty rectangles)
+- [ ] Optimize large canvas handling (chunking, culling)
+- [ ] Profile and optimize critical paths
+
+### 9.2 User Experience
+- [ ] Settings/preferences system
+- [ ] Customizable keyboard shortcuts
+- [ ] Theme support (dark/light mode)
+- [ ] Tutorial/help system (optional)
+- [ ] Smooth animations for UI transitions
+
+### 9.3 Bug Fixes & Testing
+- [ ] Test all tools with various scenarios
+- [ ] Test undo/redo extensively
+- [ ] Test save/load with complex projects
+- [ ] Memory leak detection and fixes
+- [ ] Edge case handling (empty canvas, single pixel, very large canvas)
+
+### 9.4 Documentation
+- [ ] Code documentation (comments)
+- [ ] User manual or README
+- [ ] Keyboard shortcuts reference
+- [ ] Build instructions
+
+---
+
+## Technical Architecture
+
+### File Structure
+```
+project/
+├── src/
+│   ├── main.c              # Entry point, main loop
+│   ├── canvas.c/h          # Canvas data and rendering
+│   ├── layer.c/h           # Layer system
+│   ├── frame.c/h           # Frame/animation system
+│   ├── tools.c/h           # Drawing tools
+│   ├── ui.c/h              # UI system
+│   ├── panels.c/h          # UI panels (toolbox, layers, etc.)
+│   ├── color.c/h           # Color picker and palettes
+│   ├── file_io.c/h         # Save/load functionality
+│   ├── history.c/h         # Undo/redo system
+│   ├── camera.c/h          # Viewport/camera system
+│   ├── selection.c/h       # Selection tools
+│   ├── algorithms.c/h      # Flood fill, line drawing, etc.
+│   └── utils.c/h           # Helper functions
+├── assets/
+│   ├── icons/              # Tool icons
+│   └── fonts/              # UI fonts
+├── Makefile
+└── README.md
+```
+
+### Key Data Structures
+
+```c
+// Canvas
+typedef struct {
+    int width;
+    int height;
+    Color* pixels;  // 2D array (width * height)
+} Canvas;
+
+// Layer
+typedef struct Layer {
+    char name[64];
+    Canvas* canvas;
+    float opacity;
+    bool visible;
+    BlendMode blend_mode;
+    struct Layer* next;
+} Layer;
+
+// Frame
+typedef struct Frame {
+    Layer* layers;      // Linked list of layers
+    int duration_ms;    // Frame duration
+} Frame;
+
+// Project
+typedef struct {
+    int width;
+    int height;
+    Frame* frames;      // Array of frames
+    int frame_count;
+    int current_frame;
+    Layer* current_layer;
+    Color palette[256]; // Color palette
+    int palette_size;
+} Project;
+
+// Camera
+typedef struct {
+    Vector2 offset;
+    float zoom;
+} Camera;
+
+// Tool
+typedef enum {
+    TOOL_PENCIL,
+    TOOL_ERASER,
+    TOOL_LINE,
+    TOOL_RECTANGLE,
+    TOOL_CIRCLE,
+    TOOL_FILL,
+    TOOL_EYEDROPPER,
+    TOOL_SELECT
+} ToolType;
+```
+
+---
+
+## Development Milestones
+
+- **Milestone 1** (End of Phase 2): Basic pixel drawing with tools works
+- **Milestone 2** (End of Phase 4): Layer system fully functional
+- **Milestone 3** (End of Phase 6): Animation/frames working with playback
+- **Milestone 4** (End of Phase 7): Can save/load/export projects
+- **Milestone 5** (End of Phase 9): Polished, feature-complete alpha release
+
+---
+
+## Testing Checklist
+
+- [ ] Draw with all tools on single layer
+- [ ] Draw with all tools across multiple layers
+- [ ] Test layer operations (add, delete, reorder, opacity)
+- [ ] Create animation with multiple frames
+- [ ] Test onion skinning
+- [ ] Undo/redo all operations
+- [ ] Save and load complex project
+- [ ] Export as PNG, GIF, sprite sheet
+- [ ] Zoom and pan while drawing
+- [ ] Test with various canvas sizes (16x16, 128x128, 512x512)
+- [ ] Test UI at different window sizes
+- [ ] Test all keyboard shortcuts
+- [ ] Memory usage monitoring
+
+---
+
+## Future Enhancements (Post-Launch)
+
+- [ ] Scripting support (Lua integration)
+- [ ] Plugin system
+- [ ] Custom brushes
+- [ ] Advanced blend modes
+- [ ] Gradient tool
+- [ ] Text tool
+- [ ] Reference image overlay
+- [ ] Multi-window support
+- [ ] Collaboration features (optional, ambitious)
+
+---
+
+## Resources & References
+
+- **raylib Documentation**: https://www.raylib.com/
+- **Aseprite Source Code**: https://github.com/aseprite/aseprite (for reference)
+- **Bresenham's Algorithm**: Line and circle drawing
+- **Flood Fill Algorithm**: Stack-based implementation
+- **Color Theory**: HSV/RGB conversion formulas
+
+---
+
+## Notes
+
+- Focus on pixel-perfect rendering (no anti-aliasing for canvas)
+- Keep UI simple and functional initially
+- Performance matters: optimize for 60 FPS minimum
+- Save frequently and maintain backups during development
+- Test on different platforms (Windows, Linux, macOS if possible)
