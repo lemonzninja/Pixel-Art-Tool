@@ -18,7 +18,8 @@
  */
 typedef enum {
     TOOL_PENCIL,    // Draw with foreground color
-    TOOL_ERASER     // Erase pixels (set to transparent)
+    TOOL_ERASER,    // Erase pixels (set to transparent)
+    TOOL_EYEDROPPER // Sample color from canvas
 } ToolType;
 
 /**
@@ -133,5 +134,12 @@ void DrawPixelWithTool(ToolState* state, Canvas* canvas, int pixelX, int pixelY)
  * @return Tool name string (e.g., "Pencil", "Eraser")
  */
 const char* GetToolName(ToolState* state);
+
+/**
+ * Swap foreground and background colors
+ *
+ * @param state ToolState to update
+ */
+void SwapColors(ToolState* state);
 
 #endif // TOOL_H

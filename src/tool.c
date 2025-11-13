@@ -110,6 +110,14 @@ void DrawPixelWithTool(ToolState* state, Canvas* canvas, int pixelX, int pixelY)
             SetPixel(canvas, pixelX, pixelY, (Color){0, 0, 0, 0});
             break;
 
+        case TOOL_EYEDROPPER:
+            // Sample color from canvas and set as foreground color
+            {
+                Color sampledColor = GetPixel(canvas, pixelX, pixelY);
+                state->foregroundColor = sampledColor;
+            }
+            break;
+
         default:
             break;
     }
@@ -168,6 +176,16 @@ void UpdateToolState(ToolState* state, Canvas* canvas, CanvasCamera* camera, int
 
     if (IsKeyPressed(KEY_E)) {
         SetCurrentTool(state, TOOL_ERASER);
+    }
+
+    if (IsKeyPressed(KEY_I)) {
+        SetCurrentTool(state, TOOL_EYEDROPPER);
+    }
+
+    // --- Handle Color Swapping ---
+
+    if (IsKeyPressed(KEY_X)) {
+        SwapColors(state);
     }
 
     // --- Handle Drawing Input ---
@@ -259,7 +277,20 @@ const char* GetToolName(ToolState* state) {
             return "Pencil";
         case TOOL_ERASER:
             return "Eraser";
+        case TOOL_EYEDROPPER:
+            return "Eyedropper";
         default:
             return "Unknown";
     }
+}
+
+/**
+ * Swap foreground and background colors
+ */
+void SwapColors(ToolState* state) {
+    if (state == NULL) return;
+
+    Color temp = state->foregroundColor;
+    state->foregroundColor = state->backgroundColor;
+    state->backgroundColor = temp;
 }

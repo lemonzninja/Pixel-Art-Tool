@@ -21,8 +21,8 @@ LDFLAGS = -L$(RAYLIB_PATH)/src
 LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
 
 # --- Source Files ---
-SRCS = src/main.c src/canvas.c src/camera.c src/tool.c
-OBJS = src/main.o src/canvas.o src/camera.o src/tool.o
+SRCS = src/main.c src/canvas.c src/camera.c src/tool.c src/color.c src/ui.c
+OBJS = src/main.o src/canvas.o src/camera.o src/tool.o src/color.o src/ui.o
 
 # --- Build Rules ---
 
@@ -45,6 +45,12 @@ src/camera.o: src/camera.c
 
 src/tool.o: src/tool.c
 	$(CC) $(CFLAGS) -c src/tool.c -o src/tool.o
+
+src/color.o: src/color.c
+	$(CC) $(CFLAGS) -c src/color.c -o src/color.o
+
+src/ui.o: src/ui.c
+	$(CC) $(CFLAGS) -c src/ui.c -o src/ui.o
 
 # --- Housekeeping ---
 
