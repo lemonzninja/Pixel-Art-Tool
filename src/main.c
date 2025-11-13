@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "canvas.h"
+#include "camera.h"
 #include <stddef.h>
 
 #if defined(PLATFORM_WEB)
@@ -8,34 +9,41 @@
 
 // Global application state
 static Canvas* canvas = NULL;
-static Vector2 canvasOffset;
-static float zoom = 1.0f;
+static CanvasCamera* camera = NULL;
 static const int pixelSize = 1; // Base pixel size before zoom
 
 static void UpdateDrawFrame(void)
 {
+    // Update camera based on input
+    if (camera != NULL) {
+        UpdateCanvasCamera(camera);
+    }
+
     // Begin drawing
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
     // Draw the canvas
-    if (canvas != NULL) {
-        DrawCanvas(canvas, canvasOffset, zoom, pixelSize);
+    if (canvas != NULL && camera != NULL) {
+        DrawCanvas(canvas, camera->position, camera->zoom, pixelSize);
 
         // Draw a border around the canvas for visibility
-        int scaledPixelSize = (int)(pixelSize * zoom);
+        int scaledPixelSize = (int)(pixelSize * camera->zoom);
         int canvasScreenWidth = canvas->width * scaledPixelSize;
         int canvasScreenHeight = canvas->height * scaledPixelSize;
-        DrawRectangleLines((int)canvasOffset.x - 1, (int)canvasOffset.y - 1,
+        DrawRectangleLines((int)camera->position.x - 1, (int)camera->position.y - 1,
                           canvasScreenWidth + 2, canvasScreenHeight + 2, WHITE);
     }
 
     // Draw some info text
-    DrawText("Pixel Art Tool - Basic Canvas System", 10, 10, 20, WHITE);
-    DrawText(TextFormat("Canvas: %dx%d pixels | Zoom: %.1fx",
+    DrawText("Pixel Art Tool - Camera/Viewport System", 10, 10, 20, WHITE);
+    DrawText(TextFormat("Canvas: %dx%d pixels | Zoom: %d%%",
              canvas ? canvas->width : 0,
              canvas ? canvas->height : 0,
-             zoom), 10, 35, 16, LIGHTGRAY);
+             camera ? GetCanvasCameraZoomPercent(camera) : 100), 10, 35, 16, LIGHTGRAY);
+
+    // Draw camera controls help text
+    DrawText("Controls: Middle Mouse/Space+Drag to Pan | Mouse Wheel to Zoom | R to Reset", 10, 55, 14, GRAY);
 
     EndDrawing();
 }
@@ -56,10 +64,19 @@ int main(void)
         return 1;
     }
 
+    // Create the camera
+    camera = CreateCanvasCamera();
+    if (!camera) {
+        TraceLog(LOG_ERROR, "Failed to create camera");
+        DestroyCanvas(canvas);
+        CloseWindow();
+        return 1;
+    }
+
     // Center the canvas on screen
-    int scaledPixelSize = (int)(pixelSize * zoom);
-    canvasOffset.x = (screenWidth - (canvas->width * scaledPixelSize)) / 2.0f;
-    canvasOffset.y = (screenHeight - (canvas->height * scaledPixelSize)) / 2.0f;
+    int scaledPixelSize = (int)(pixelSize * camera->zoom);
+    camera->position.x = (screenWidth - (canvas->width * scaledPixelSize)) / 2.0f;
+    camera->position.y = (screenHeight - (canvas->height * scaledPixelSize)) / 2.0f;
 
     // Draw some sample pixels to demonstrate the canvas
     // Draw a simple pattern: border and diagonal lines
@@ -97,6 +114,7 @@ int main(void)
 #endif
 
     // Cleanup
+    DestroyCanvasCamera(camera);
     DestroyCanvas(canvas);
     CloseWindow();
 
