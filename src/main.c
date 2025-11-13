@@ -4,8 +4,6 @@
     #include <emscripten/emscripten.h>
 #endif
 
-static App gApp;
-
 static void UpdateDrawFrame(void)
 {
 
