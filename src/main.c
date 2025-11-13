@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "canvas.h"
 #include "camera.h"
+#include "tool.h"
 #include <stddef.h>
 
 #if defined(PLATFORM_WEB)
@@ -10,6 +11,7 @@
 // Global application state
 static Canvas* canvas = NULL;
 static CanvasCamera* camera = NULL;
+static ToolState* toolState = NULL;
 static const int pixelSize = 1; // Base pixel size before zoom
 
 static void UpdateDrawFrame(void)
@@ -17,6 +19,11 @@ static void UpdateDrawFrame(void)
     // Update camera based on input
     if (camera != NULL) {
         UpdateCanvasCamera(camera);
+    }
+
+    // Update tool state and handle drawing
+    if (toolState != NULL && canvas != NULL && camera != NULL) {
+        UpdateToolState(toolState, canvas, camera, pixelSize);
     }
 
     // Begin drawing
@@ -36,14 +43,24 @@ static void UpdateDrawFrame(void)
     }
 
     // Draw some info text
-    DrawText("Pixel Art Tool - Camera/Viewport System", 10, 10, 20, WHITE);
-    DrawText(TextFormat("Canvas: %dx%d pixels | Zoom: %d%%",
+    DrawText("Pixel Art Tool - Basic Drawing Tools", 10, 10, 20, WHITE);
+    DrawText(TextFormat("Canvas: %dx%d pixels | Zoom: %d%% | Tool: %s",
              canvas ? canvas->width : 0,
              canvas ? canvas->height : 0,
-             camera ? GetCanvasCameraZoomPercent(camera) : 100), 10, 35, 16, LIGHTGRAY);
+             camera ? GetCanvasCameraZoomPercent(camera) : 100,
+             toolState ? GetToolName(toolState) : "None"), 10, 35, 16, LIGHTGRAY);
 
-    // Draw camera controls help text
-    DrawText("Controls: Middle Mouse/Space+Drag to Pan | Mouse Wheel to Zoom | R to Reset", 10, 55, 14, GRAY);
+    // Draw tool color indicator
+    if (toolState != NULL) {
+        Color fgColor = GetForegroundColor(toolState);
+        DrawText("Color:", 10, 55, 14, GRAY);
+        DrawRectangle(65, 54, 20, 16, fgColor);
+        DrawRectangleLines(65, 54, 20, 16, WHITE);
+    }
+
+    // Draw controls help text
+    DrawText("Controls: Left Click to Draw | B = Pencil, E = Eraser", 10, 75, 14, GRAY);
+    DrawText("Pan: Middle Mouse/Space+Drag | Zoom: Mouse Wheel | R = Reset", 10, 93, 14, GRAY);
 
     EndDrawing();
 }
@@ -73,35 +90,22 @@ int main(void)
         return 1;
     }
 
+    // Create the tool state
+    toolState = CreateToolState();
+    if (!toolState) {
+        TraceLog(LOG_ERROR, "Failed to create tool state");
+        DestroyCanvasCamera(camera);
+        DestroyCanvas(canvas);
+        CloseWindow();
+        return 1;
+    }
+
     // Center the canvas on screen
     int scaledPixelSize = (int)(pixelSize * camera->zoom);
     camera->position.x = (screenWidth - (canvas->width * scaledPixelSize)) / 2.0f;
     camera->position.y = (screenHeight - (canvas->height * scaledPixelSize)) / 2.0f;
 
-    // Draw some sample pixels to demonstrate the canvas
-    // Draw a simple pattern: border and diagonal lines
-    for (int x = 0; x < canvas->width; x++) {
-        SetPixel(canvas, x, 0, RED);                    // Top border
-        SetPixel(canvas, x, canvas->height - 1, RED);   // Bottom border
-    }
-    for (int y = 0; y < canvas->height; y++) {
-        SetPixel(canvas, 0, y, RED);                    // Left border
-        SetPixel(canvas, canvas->width - 1, y, RED);    // Right border
-    }
-    // Diagonal lines
-    for (int i = 0; i < canvas->width && i < canvas->height; i++) {
-        SetPixel(canvas, i, i, BLUE);                           // Top-left to bottom-right
-        SetPixel(canvas, canvas->width - 1 - i, i, GREEN);      // Top-right to bottom-left
-    }
-    // Center cross
-    int centerX = canvas->width / 2;
-    int centerY = canvas->height / 2;
-    for (int i = 0; i < canvas->width; i++) {
-        SetPixel(canvas, i, centerY, YELLOW);
-    }
-    for (int i = 0; i < canvas->height; i++) {
-        SetPixel(canvas, centerX, i, YELLOW);
-    }
+    // Canvas starts empty - ready for user to draw!
 
 
 #if defined(PLATFORM_WEB)
@@ -114,6 +118,7 @@ int main(void)
 #endif
 
     // Cleanup
+    DestroyToolState(toolState);
     DestroyCanvasCamera(camera);
     DestroyCanvas(canvas);
     CloseWindow();
