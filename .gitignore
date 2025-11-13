@@ -3,6 +3,7 @@
 *.exe
 *.web
 pixel_art_tool
+nul
 
 # Object files
 obj/
