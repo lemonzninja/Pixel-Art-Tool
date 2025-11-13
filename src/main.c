@@ -2,6 +2,8 @@
 #include "canvas.h"
 #include "camera.h"
 #include "tool.h"
+#include "ui.h"
+#include "color.h"
 #include <stddef.h>
 
 #if defined(PLATFORM_WEB)
@@ -12,17 +14,51 @@
 static Canvas* canvas = NULL;
 static CanvasCamera* camera = NULL;
 static ToolState* toolState = NULL;
+static ColorPicker colorPicker;
 static const int pixelSize = 1; // Base pixel size before zoom
 
 static void UpdateDrawFrame(void)
 {
-    // Update camera based on input
-    if (camera != NULL) {
+    // Toggle color picker with C key
+    if (IsKeyPressed(KEY_C)) {
+        ToggleColorPicker(&colorPicker);
+        // If opening, sync with current foreground color
+        if (colorPicker.isOpen && toolState != NULL) {
+            SetColorPickerColor(&colorPicker, GetForegroundColor(toolState));
+        }
+    }
+
+    // Handle clicking on color swatches to open picker
+    Vector2 mousePos = GetMousePosition();
+    Rectangle swatchArea = {10, 55, 50, 50};
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+        CheckCollisionPointRec(mousePos, swatchArea) &&
+        !colorPicker.isOpen) {
+        ToggleColorPicker(&colorPicker);
+        if (toolState != NULL) {
+            SetColorPickerColor(&colorPicker, GetForegroundColor(toolState));
+        }
+    }
+
+    // Update color picker (handle input and get new color)
+    if (toolState != NULL) {
+        Color newColor = GetForegroundColor(toolState);
+        if (UpdateColorPicker(&colorPicker, &newColor)) {
+            // Color changed in picker, update tool state
+            SetForegroundColor(toolState, newColor);
+        }
+    }
+
+    // Only update camera and tools if not interacting with color picker
+    bool isOverPicker = IsMouseOverColorPicker(&colorPicker);
+
+    // Update camera based on input (only if not over color picker)
+    if (camera != NULL && !isOverPicker) {
         UpdateCanvasCamera(camera);
     }
 
-    // Update tool state and handle drawing
-    if (toolState != NULL && canvas != NULL && camera != NULL) {
+    // Update tool state and handle drawing (only if not over color picker)
+    if (toolState != NULL && canvas != NULL && camera != NULL && !isOverPicker) {
         UpdateToolState(toolState, canvas, camera, pixelSize);
     }
 
@@ -43,24 +79,30 @@ static void UpdateDrawFrame(void)
     }
 
     // Draw some info text
-    DrawText("Pixel Art Tool - Basic Drawing Tools", 10, 10, 20, WHITE);
+    DrawText("Pixel Art Tool - Color System", 10, 10, 20, WHITE);
     DrawText(TextFormat("Canvas: %dx%d pixels | Zoom: %d%% | Tool: %s",
              canvas ? canvas->width : 0,
              canvas ? canvas->height : 0,
              camera ? GetCanvasCameraZoomPercent(camera) : 100,
              toolState ? GetToolName(toolState) : "None"), 10, 35, 16, LIGHTGRAY);
 
-    // Draw tool color indicator
+    // Draw color swatches (foreground/background)
     if (toolState != NULL) {
         Color fgColor = GetForegroundColor(toolState);
-        DrawText("Color:", 10, 55, 14, GRAY);
-        DrawRectangle(65, 54, 20, 16, fgColor);
-        DrawRectangleLines(65, 54, 20, 16, WHITE);
+        Color bgColor = GetBackgroundColor(toolState);
+        DrawColorSwatches(10, 55, 40, fgColor, bgColor);
+    }
+
+    // Draw color picker UI
+    if (toolState != NULL) {
+        Color currentColor = GetForegroundColor(toolState);
+        DrawColorPicker(&colorPicker, currentColor);
     }
 
     // Draw controls help text
-    DrawText("Controls: Left Click to Draw | B = Pencil, E = Eraser", 10, 75, 14, GRAY);
-    DrawText("Pan: Middle Mouse/Space+Drag | Zoom: Mouse Wheel | R = Reset", 10, 93, 14, GRAY);
+    DrawText("Tools: B = Pencil | E = Eraser | I = Eyedropper", 10, 110, 14, GRAY);
+    DrawText("Color: X = Swap | C = Color Picker | Click swatches to pick", 10, 128, 14, GRAY);
+    DrawText("Pan: Middle Mouse/Space+Drag | Zoom: Mouse Wheel | R = Reset", 10, 146, 14, GRAY);
 
     EndDrawing();
 }
@@ -99,6 +141,9 @@ int main(void)
         CloseWindow();
         return 1;
     }
+
+    // Initialize color picker (positioned on the right side of screen)
+    colorPicker = InitColorPicker(screenWidth - 270, 100, 250, 250);
 
     // Center the canvas on screen
     int scaledPixelSize = (int)(pixelSize * camera->zoom);
